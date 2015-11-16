@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -687,5 +688,25 @@ public class ViewerManager {
         } else if (inverse.equals(ViewerAttributeRegistry.INVERSE_SEARCH_STD)) {
             new Thread(new ViewerOutputScanner(project, in)).start();
         }
+    }
+    
+    public static void sendDDERefreshAction(ViewerAttributeRegistry reg) {
+    	ViewerManager mgr = new ViewerManager(reg, Collections.EMPTY_MAP);
+        if (!mgr.initialize()) {
+            return;
+        }
+    	
+        // Send DDE if on Win32
+    	if (Platform.getOS().equals(Platform.OS_WIN32)) {
+        	String command;
+			try {
+				command = mgr.translatePatterns(reg.getDDEViewCommand());
+				String server = reg.getDDEViewServer();
+				String topic = reg.getDDEViewTopic();
+				
+				DDEClient.execute(server, topic, command);
+			} catch (CoreException e) {
+			}
+    	}
     }
 }

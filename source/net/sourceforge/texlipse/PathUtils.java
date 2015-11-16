@@ -170,7 +170,7 @@ public class PathUtils {
 	            StringBuffer sb = new StringBuffer();
 	            sb.append(token.substring(1));
 	            token = st.nextToken();
-	            while (!token.endsWith("\"") && st.hasMoreTokens()) {
+	            while (!token.replaceAll("\\\\\"", "").endsWith("\"") && st.hasMoreTokens()) {
 	                sb.append(' ');
 	                sb.append(token);
 	                token = st.nextToken();

@@ -16,6 +16,8 @@ import net.sourceforge.texlipse.model.TexDocumentModel;
 import net.sourceforge.texlipse.outline.TexOutlinePage;
 import net.sourceforge.texlipse.properties.TexlipseProperties;
 import net.sourceforge.texlipse.treeview.views.TexOutlineTreeView;
+import net.sourceforge.texlipse.viewer.ViewerAttributeRegistry;
+import net.sourceforge.texlipse.viewer.ViewerManager;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -31,7 +33,12 @@ import org.eclipse.jface.text.source.projection.ProjectionViewer;
 import org.eclipse.jface.viewers.IPostSelectionProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.VerifyKeyListener;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IFileEditorInput;
@@ -63,7 +70,53 @@ public class TexEditor extends TextEditor {
     private ProjectionSupport fProjectionSupport;
     private BracketInserter fBracketInserter;
     private TexlipseAnnotationUpdater fAnnotationUpdater;
+    private boolean ctrlPressed = false;
     
+	private KeyListener sendDdeKeyListener = new KeyListener() {
+		
+		public void keyReleased(KeyEvent e) {
+			ctrlPressed = false;
+			return;
+		}
+		
+		public void keyPressed(KeyEvent e) {
+			if (e.keyCode == SWT.CTRL) {
+				ctrlPressed = true;
+				return;
+			}
+				
+			if (!isDirty() && 
+					(e.keyCode == SWT.ARROW_UP ||
+					 e.keyCode == SWT.ARROW_DOWN ||
+					 e.keyCode == SWT.ARROW_LEFT ||
+					 e.keyCode == SWT.ARROW_RIGHT ||
+					 e.keyCode == SWT.PAGE_DOWN ||
+					 e.keyCode == SWT.PAGE_UP ||
+					 e.keyCode == SWT.HOME ||
+					 e.keyCode == SWT.END)) {					
+	            ViewerAttributeRegistry var = new ViewerAttributeRegistry();
+	            ViewerManager.sendDDERefreshAction(var);
+			}				
+		}
+	};
+
+	private MouseListener sendDdeMouseListener = new MouseListener() {
+		
+		public void mouseUp(MouseEvent e) {
+			
+		}
+		
+		public void mouseDown(MouseEvent e) {
+			if (ctrlPressed || !isDirty()) {					
+	            ViewerAttributeRegistry var = new ViewerAttributeRegistry();
+	            ViewerManager.sendDDERefreshAction(var);
+			}				
+		}
+		
+		public void mouseDoubleClick(MouseEvent e) {
+		}
+	};
+
     
     /**
      * Constructs a new editor.
