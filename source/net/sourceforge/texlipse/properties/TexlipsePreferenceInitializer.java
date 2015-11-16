@@ -19,6 +19,7 @@ import net.sourceforge.texlipse.builder.ProgramRunner;
 import net.sourceforge.texlipse.editor.ColorManager;
 import net.sourceforge.texlipse.spelling.SpellChecker;
 import net.sourceforge.texlipse.viewer.ViewerAttributeRegistry;
+import net.sourceforge.texlipse.viewer.ViewerManager;
 import net.sourceforge.texlipse.viewer.util.FileLocationClient;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
@@ -149,5 +150,6 @@ public class TexlipsePreferenceInitializer extends
         pref.setDefault(TexlipseProperties.SPELLCHECKER_IGNORE_MIXED_CASE, true);
         
         pref.setDefault(TexlipseProperties.BUILDER_FORCE_RETURN_FOCUS, true);
+        pref.setDefault(TexlipseProperties.BUILDER_KEEP_SYNCHRONIZED, false);
     }
 }

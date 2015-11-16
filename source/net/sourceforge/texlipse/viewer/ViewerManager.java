@@ -38,7 +38,10 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -690,23 +693,29 @@ public class ViewerManager {
         }
     }
     
-    public static void sendDDERefreshAction(ViewerAttributeRegistry reg) {
-    	ViewerManager mgr = new ViewerManager(reg, Collections.EMPTY_MAP);
+    public static void sendDDERefreshAction(final ViewerAttributeRegistry reg) {
+    	final ViewerManager mgr = new ViewerManager(reg, Collections.EMPTY_MAP);
         if (!mgr.initialize()) {
             return;
         }
     	
         // Send DDE if on Win32
     	if (Platform.getOS().equals(Platform.OS_WIN32)) {
-        	String command;
-			try {
-				command = mgr.translatePatterns(reg.getDDEViewCommand());
-				String server = reg.getDDEViewServer();
-				String topic = reg.getDDEViewTopic();
-				
-				DDEClient.execute(server, topic, command);
-			} catch (CoreException e) {
-			}
+    		new Job("") {
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					try {
+						String command = mgr.translatePatterns(reg.getDDEViewCommand());
+						String server = reg.getDDEViewServer();
+						String topic = reg.getDDEViewTopic();
+						
+						DDEClient.execute(server, topic, command);
+					} catch (CoreException e) {
+						return new Status(IStatus.ERROR, TexlipsePlugin.getPluginId(), "Error sending the DDE command", e);
+					}
+					return Status.OK_STATUS;
+				}
+			}.schedule();
     	}
     }
 }

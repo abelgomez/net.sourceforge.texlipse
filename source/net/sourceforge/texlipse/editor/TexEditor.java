@@ -34,7 +34,10 @@ import org.eclipse.jface.viewers.IPostSelectionProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.VerifyKeyListener;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
@@ -93,9 +96,11 @@ public class TexEditor extends TextEditor {
 					 e.keyCode == SWT.PAGE_DOWN ||
 					 e.keyCode == SWT.PAGE_UP ||
 					 e.keyCode == SWT.HOME ||
-					 e.keyCode == SWT.END)) {					
-	            ViewerAttributeRegistry var = new ViewerAttributeRegistry();
-	            ViewerManager.sendDDERefreshAction(var);
+					 e.keyCode == SWT.END)) {
+				if (TexlipsePlugin.getDefault().getPreferenceStore().getBoolean(TexlipseProperties.BUILDER_KEEP_SYNCHRONIZED)) {
+		            ViewerAttributeRegistry var = new ViewerAttributeRegistry();
+		            ViewerManager.sendDDERefreshAction(var);
+				}
 			}				
 		}
 	};
@@ -107,9 +112,11 @@ public class TexEditor extends TextEditor {
 		}
 		
 		public void mouseDown(MouseEvent e) {
-			if (ctrlPressed || !isDirty()) {					
-	            ViewerAttributeRegistry var = new ViewerAttributeRegistry();
-	            ViewerManager.sendDDERefreshAction(var);
+			if (ctrlPressed || !isDirty()) {
+				if (TexlipsePlugin.getDefault().getPreferenceStore().getBoolean(TexlipseProperties.BUILDER_KEEP_SYNCHRONIZED)) {
+		            ViewerAttributeRegistry var = new ViewerAttributeRegistry();
+		            ViewerManager.sendDDERefreshAction(var);
+				}
 			}				
 		}
 		
@@ -168,6 +175,19 @@ public class TexEditor extends TextEditor {
                 fBracketInserter = new BracketInserter(getSourceViewer(), this);
             ((ITextViewerExtension) sourceViewer).prependVerifyKeyListener(fBracketInserter);
         }
+        
+        
+        final StyledText textWidget = sourceViewer.getTextWidget();
+        textWidget.addKeyListener(sendDdeKeyListener);
+        textWidget.addMouseListener(sendDdeMouseListener);
+        textWidget.addDisposeListener(new DisposeListener() {
+			public void widgetDisposed(DisposeEvent e) {
+				textWidget.removeKeyListener(sendDdeKeyListener);
+				textWidget.removeMouseListener(sendDdeMouseListener);
+				textWidget.removeDisposeListener(this);
+			}
+		});
+
     }
 
     /** 

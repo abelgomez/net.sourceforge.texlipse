@@ -71,6 +71,8 @@ public class ViewerSettingsPreferencePage extends FieldEditorPreferencePage
         
         addField(new BooleanFieldEditor(TexlipseProperties.BUILDER_RETURN_FOCUS, TexlipsePlugin.getResourceString("preferenceViewerReturnFocusLabel"), getFieldEditorParent()));
         
+        addField(new BooleanFieldEditor(TexlipseProperties.BUILDER_KEEP_SYNCHRONIZED, TexlipsePlugin.getResourceString("preferenceViewerKeepSynchronized"), getFieldEditorParent()));
+        
         WorkbenchHelp.setHelp(port.getTextControl(getFieldEditorParent()), TexlipseHelpIds.VIEWER_PORT);
     }
 
