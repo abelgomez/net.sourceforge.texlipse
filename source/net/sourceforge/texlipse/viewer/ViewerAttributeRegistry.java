@@ -9,6 +9,9 @@
  */
 package net.sourceforge.texlipse.viewer;
 
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -19,7 +22,13 @@ import java.util.Map;
 import net.sourceforge.texlipse.PathUtils;
 import net.sourceforge.texlipse.TexlipsePlugin;
 import net.sourceforge.texlipse.properties.TexlipseProperties;
+import net.sourceforge.texlipse.viewer.util.FileLocationClient;
 
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 
@@ -73,10 +82,29 @@ public class ViewerAttributeRegistry implements Cloneable {
     private static final String DEFAULT_ARGUMENTS_YAP = "-1 -s \"%line %texfile\" %file";
 
     private static final String DEFAULT_ARGUMENTS_GV = "%file";
-    private static final String DEFAULT_ARGUMENTS_SUMATRA = "-reuse-instance %file";
+    private static final String DEFAULT_ARGUMENTS_SUMATRA;
+	static {
+		StringBuilder builder = new StringBuilder();
+		builder.append("-reuse-instance %file ");
+		try {
+			builder.append("-inverse-search ");
+			builder.append("\"javaw -classpath \\\"");
+			URI uri = FileLocator.toFileURL(
+					FileLocator.find(Platform.getBundle(TexlipsePlugin.getPluginId()), new Path("texlipse.jar"), null))
+					.toURI();
+			builder.append(new File(uri).getAbsolutePath());
+			builder.append("\\\" net.sourceforge.texlipse.viewer.util.FileLocationClient -p ");
+			builder.append(FileLocationClient.DEFAULT_PORTNUMBER);
+			builder.append(" -f \\\"%f\\\" -l %l\"");
+		} catch (Throwable t) {
+			TexlipsePlugin.getDefault().getLog()
+					.log(new Status(IStatus.ERROR, TexlipsePlugin.getPluginId(), t.getLocalizedMessage(), t));
+		}
+		DEFAULT_ARGUMENTS_SUMATRA = builder.toString();
+	}
     private static final String DEFAULT_ARGUMENTS_ACROBAT = "%file";
     private static final String DEFAULT_ARGUMENTS_ITEXMAC = "-a \"/Applications/iTeXMac 1.3.15/iTeXMac.app\" %file";
-    
+
     
     // viewer attributes
     private HashMap<String, String> registry;
@@ -135,12 +163,12 @@ public class ViewerAttributeRegistry implements Cloneable {
         
         // list the viewers
         List<String> vlist = new ArrayList<String>();
+        vlist.add(VIEWER_SUMATRA);
         vlist.add(VIEWER_XDVI);
         vlist.add(VIEWER_YAP);
         vlist.add(VIEWER_ITEXMAC);
         vlist.add(VIEWER_KDVI);
         vlist.add(VIEWER_GV);
-        vlist.add(VIEWER_SUMATRA);
         vlist.add(VIEWER_ACROBAT);
         vlist.add(VIEWER_NONE);
         vlist.remove(def);
@@ -185,7 +213,7 @@ public class ViewerAttributeRegistry implements Cloneable {
 
         prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_COMMAND, findFromEnvPath("SumatraPDF", "SumatraPDF.exe", "C:\\Program Files\\SumatraPDF"));
         prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_ARGUMENTS, DEFAULT_ARGUMENTS_SUMATRA);
-        prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_DDE_VIEW_COMMAND, "[ForwardSearch(\"%file\",\"%texfile\",%line,0)]"); 
+        prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_DDE_VIEW_COMMAND, "[ForwardSearch(\"%fullfile\",\"%texfile\",%line,0)]"); 
         prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_DDE_VIEW_SERVER, "SUMATRA");
         prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_DDE_VIEW_TOPIC, "control");
         prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_FORMAT, TexlipseProperties.OUTPUT_FORMAT_PDF);
