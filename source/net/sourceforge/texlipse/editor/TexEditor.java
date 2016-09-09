@@ -11,6 +11,7 @@ package net.sourceforge.texlipse.editor;
 
 import java.util.ArrayList;
 
+
 import net.sourceforge.texlipse.TexlipsePlugin;
 import net.sourceforge.texlipse.model.TexDocumentModel;
 import net.sourceforge.texlipse.outline.TexOutlinePage;
@@ -188,6 +189,16 @@ public class TexEditor extends TextEditor {
 			}
 		});
 
+		if (TexlipsePlugin.getDefault().getPreferenceStore().getBoolean(TexlipseProperties.WORDWRAP_DEFAULT)) {
+			String wrapStyle = TexlipsePlugin.getPreference(TexlipseProperties.WORDWRAP_TYPE);
+			if (wrapStyle.equals(TexlipseProperties.WORDWRAP_TYPE_SOFT)) {
+				TexAutoIndentStrategy.setHardWrap(false);
+				textWidget.setWordWrap(true);
+			} else if (wrapStyle.equals(TexlipseProperties.WORDWRAP_TYPE_HARD)) {
+				TexAutoIndentStrategy.setHardWrap(true);
+				textWidget.setWordWrap(false);
+			}
+		}
     }
 
     /** 
