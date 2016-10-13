@@ -213,11 +213,11 @@ public class ViewerAttributeRegistry implements Cloneable {
 
         prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_COMMAND, findFromEnvPath("SumatraPDF", "SumatraPDF.exe", "C:\\Program Files\\SumatraPDF"));
         prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_ARGUMENTS, DEFAULT_ARGUMENTS_SUMATRA);
-        prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_DDE_VIEW_COMMAND, "[ForwardSearch(\"%fullfile\",\"%texfile\",%line,0)]"); 
+        prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_DDE_VIEW_COMMAND, "[ForwardSearch(\"%fullfile\",\"%fulltexfile\",%line,0)]"); 
         prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_DDE_VIEW_SERVER, "SUMATRA");
         prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_DDE_VIEW_TOPIC, "control");
         prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_FORMAT, TexlipseProperties.OUTPUT_FORMAT_PDF);
-        prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_INVERSE_SEARCH, INVERSE_SEARCH_NO);
+        prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_INVERSE_SEARCH, INVERSE_SEARCH_RUN);
         prefs.setDefault(VIEWER_SUMATRA + ATTRIBUTE_FORWARD_SEARCH, "true");
 
         prefs.setDefault(VIEWER_ACROBAT + ATTRIBUTE_COMMAND, findFromEnvPath("acroread", "acroread.exe", ""));
