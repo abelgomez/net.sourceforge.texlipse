@@ -44,7 +44,11 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.graphics.FontMetrics;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.editors.text.TextEditor;
 import org.eclipse.ui.texteditor.ITextEditorActionDefinitionIds;
@@ -135,6 +139,30 @@ public class TexEditor extends TextEditor {
         folder = new TexCodeFolder(this);
     }
 
+	private Listener resizeListener = new Listener() {
+		public void handleEvent(Event event) {
+			if (getSourceViewer() != null && getSourceViewer().getTextWidget() != null) {
+				StyledText textWidget = getSourceViewer().getTextWidget();
+				if (textWidget.getWordWrap()) {
+					int lineLength = TexlipsePlugin.getDefault().getPreferenceStore().getInt(TexlipseProperties.WORDWRAP_LENGTH);
+					GC gc = null;
+					try {
+						gc = new GC(textWidget);
+						textWidget.setRightMargin(textWidget.getSize().x - lineLength * gc.getFontMetrics().getAverageCharWidth() - textWidget.getVerticalBar().getSize().x);
+						textWidget.setWrapIndent(gc.getFontMetrics().getAverageCharWidth());
+					} finally {
+						if (gc != null) {
+							gc.dispose();
+						}
+					}
+				} else {
+					textWidget.setRightMargin(0);
+					textWidget.setWrapIndent(0);
+				}
+			}
+		}
+	};
+    
     /** 
      * Create the part control.
      * 
@@ -194,7 +222,9 @@ public class TexEditor extends TextEditor {
 			if (wrapStyle.equals(TexlipseProperties.WORDWRAP_TYPE_SOFT)) {
 				TexAutoIndentStrategy.setHardWrap(false);
 				textWidget.setWordWrap(true);
+				textWidget.addListener(SWT.Resize, resizeListener);
 			} else if (wrapStyle.equals(TexlipseProperties.WORDWRAP_TYPE_HARD)) {
+				textWidget.removeListener(SWT.Resize, resizeListener);
 				TexAutoIndentStrategy.setHardWrap(true);
 				textWidget.setWordWrap(false);
 			}
