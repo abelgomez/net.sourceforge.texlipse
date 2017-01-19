@@ -149,7 +149,7 @@ public class TexEditor extends TextEditor {
 					try {
 						gc = new GC(textWidget);
 						textWidget.setRightMargin(textWidget.getSize().x - lineLength * gc.getFontMetrics().getAverageCharWidth() - textWidget.getVerticalBar().getSize().x);
-						textWidget.setWrapIndent(gc.getFontMetrics().getAverageCharWidth());
+//						textWidget.setWrapIndent(gc.getFontMetrics().getAverageCharWidth());
 					} finally {
 						if (gc != null) {
 							gc.dispose();
@@ -157,7 +157,7 @@ public class TexEditor extends TextEditor {
 					}
 				} else {
 					textWidget.setRightMargin(0);
-					textWidget.setWrapIndent(0);
+//					textWidget.setWrapIndent(0);
 				}
 			}
 		}
