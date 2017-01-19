@@ -24,9 +24,18 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.layout.GridDataFactory;
+import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.JFacePreferences;
+import org.eclipse.jface.preference.PreferenceConverter;
+import org.eclipse.jface.resource.JFaceColors;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextViewerExtension;
+import org.eclipse.jface.text.ITextViewerExtension2;
+import org.eclipse.jface.text.JFaceTextUtil;
+import org.eclipse.jface.text.MarginPainter;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.IVerticalRuler;
 import org.eclipse.jface.text.source.projection.ProjectionSupport;
@@ -43,14 +52,22 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Slider;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.editors.text.TextEditor;
+import org.eclipse.ui.internal.editors.text.EditorsPlugin;
+import org.eclipse.ui.texteditor.AbstractDecoratedTextEditorPreferenceConstants;
 import org.eclipse.ui.texteditor.ITextEditorActionDefinitionIds;
 import org.eclipse.ui.texteditor.SourceViewerDecorationSupport;
 import org.eclipse.ui.texteditor.TextOperationAction;
@@ -79,6 +96,8 @@ public class TexEditor extends TextEditor {
     private BracketInserter fBracketInserter;
     private TexlipseAnnotationUpdater fAnnotationUpdater;
     private boolean ctrlPressed = false;
+    
+    private Slider slider;
     
 	private KeyListener sendDdeKeyListener = new KeyListener() {
 		
@@ -140,24 +159,42 @@ public class TexEditor extends TextEditor {
     }
 
 	private Listener resizeListener = new Listener() {
+		
+		private MarginPainter marginPainter;
+		
 		public void handleEvent(Event event) {
+			
+			int lineLength = TexlipsePlugin.getDefault().getPreferenceStore().getInt(TexlipseProperties.WORDWRAP_LENGTH);
+
+			if (marginPainter == null) {
+				marginPainter = new MarginPainter(getSourceViewer());
+			}
+			marginPainter.setMarginRulerColor(getSharedColors().getColor(PreferenceConverter.getColor(getPreferenceStore(), AbstractDecoratedTextEditorPreferenceConstants.EDITOR_PRINT_MARGIN_COLOR)));
+			marginPainter.setMarginRulerColumn(lineLength);
+			
 			if (getSourceViewer() != null && getSourceViewer().getTextWidget() != null) {
 				StyledText textWidget = getSourceViewer().getTextWidget();
+
+				if (slider != null) {
+					slider.setMinimum(0);
+					slider.setMaximum(textWidget.getSize().x / JFaceTextUtil.getAverageCharWidth(textWidget));
+					slider.setSelection(lineLength);
+					slider.setIncrement(1);
+					slider.setPageIncrement(1);
+					slider.setThumb(1);
+				}
+				
+
 				if (textWidget.getWordWrap()) {
-					int lineLength = TexlipsePlugin.getDefault().getPreferenceStore().getInt(TexlipseProperties.WORDWRAP_LENGTH);
-					GC gc = null;
-					try {
-						gc = new GC(textWidget);
-						textWidget.setRightMargin(textWidget.getSize().x - lineLength * gc.getFontMetrics().getAverageCharWidth() - textWidget.getVerticalBar().getSize().x);
-//						textWidget.setWrapIndent(gc.getFontMetrics().getAverageCharWidth());
-					} finally {
-						if (gc != null) {
-							gc.dispose();
-						}
+					textWidget.setRightMargin(textWidget.getSize().x - lineLength * JFaceTextUtil.getAverageCharWidth(textWidget) - textWidget.getVerticalBar().getSize().x);
+					if (getSourceViewer() instanceof ITextViewerExtension2) {
+						((ITextViewerExtension2) getSourceViewer()).addPainter(marginPainter);
 					}
 				} else {
 					textWidget.setRightMargin(0);
-//					textWidget.setWrapIndent(0);
+					if (getSourceViewer() instanceof ITextViewerExtension2) {
+						((ITextViewerExtension2) getSourceViewer()).removePainter(marginPainter);
+					}
 				}
 			}
 		}
@@ -169,7 +206,26 @@ public class TexEditor extends TextEditor {
      * @see org.eclipse.ui.IWorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
      */
     public void createPartControl(Composite parent) {
-        super.createPartControl(parent);
+    	Composite top = new Composite(parent, SWT.NONE);
+    	top.setLayoutData(GridDataFactory.fillDefaults().create());
+		top.setLayout(GridLayoutFactory.fillDefaults().spacing(0, 0).create());
+		
+    	slider = new Slider(top, SWT.NONE);
+    	slider.setLayoutData(GridDataFactory.fillDefaults().align(SWT.FILL, SWT.BEGINNING).grab(true, false).create());
+    	slider.addSelectionListener(new SelectionAdapter() {
+    		@Override
+    		public void widgetSelected(SelectionEvent e) {
+    			TexlipsePlugin.getDefault().getPreferenceStore().setValue(TexlipseProperties.WORDWRAP_LENGTH, slider.getSelection());
+    			resizeListener.handleEvent(new Event());
+    		}
+		});
+    	
+    	Composite editorComposite = new Composite(top, SWT.NONE);
+    	editorComposite.setLayoutData(GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).create());
+    	editorComposite.setLayout(new FillLayout());
+    	
+        super.createPartControl(editorComposite);
+        
         // enable projection support (for code folder)
         ProjectionViewer projectionViewer = (ProjectionViewer) getSourceViewer();
         fProjectionSupport = new ProjectionSupport(projectionViewer,
