@@ -285,6 +285,7 @@ public class TexEditor extends TextEditor {
 				textWidget.setWordWrap(false);
 			}
 		}
+		textWidget.addListener(SWT.Activate, resizeListener);
     }
 
     /** 
@@ -504,5 +505,6 @@ public class TexEditor extends TextEditor {
      */
     protected void initializeKeyBindingScopes() {
         setKeyBindingScopes(new String[] { "org.eclipse.ui.textEditorScope", "net.sourceforge.texlipse.texEditorScope" });  //$NON-NLS-1$
-    }}
+    }
+}
 
