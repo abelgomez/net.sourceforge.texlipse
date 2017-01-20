@@ -44,6 +44,10 @@ import org.eclipse.jface.viewers.IPostSelectionProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ExtendedModifyEvent;
+import org.eclipse.swt.custom.ExtendedModifyListener;
+import org.eclipse.swt.custom.LineStyleEvent;
+import org.eclipse.swt.custom.LineStyleListener;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.VerifyKeyListener;
 import org.eclipse.swt.events.DisposeEvent;
@@ -200,6 +204,30 @@ public class TexEditor extends TextEditor {
 		}
 	};
     
+	LineStyleListener lineStyleListener = new LineStyleListener() {
+		public void lineGetStyle(LineStyleEvent event) {
+			if (getSourceViewer() != null && getSourceViewer().getTextWidget() != null) {
+				StyledText textWidget = getSourceViewer().getTextWidget();
+				int lineNumber = textWidget.getLineAtOffset(event.lineOffset);
+				String line = textWidget.getLine(lineNumber);
+				int chars = 0;
+				loop : for (byte c : line.getBytes()) {
+					switch (c) {
+						case ' ':
+							chars++;
+							break;
+						case '\t':
+							chars += getSourceViewerConfiguration().getTabWidth(getSourceViewer());
+							break;
+						default:
+							break loop;
+					}
+				}
+				event.wrapIndent = chars * JFaceTextUtil.getAverageCharWidth(textWidget);
+			}
+		}
+	};
+	
     /** 
      * Create the part control.
      * 
@@ -279,8 +307,10 @@ public class TexEditor extends TextEditor {
 				TexAutoIndentStrategy.setHardWrap(false);
 				textWidget.setWordWrap(true);
 				textWidget.addListener(SWT.Resize, resizeListener);
+				textWidget.addLineStyleListener(lineStyleListener);
 			} else if (wrapStyle.equals(TexlipseProperties.WORDWRAP_TYPE_HARD)) {
 				textWidget.removeListener(SWT.Resize, resizeListener);
+				textWidget.removeLineStyleListener(lineStyleListener);
 				TexAutoIndentStrategy.setHardWrap(true);
 				textWidget.setWordWrap(false);
 			}
