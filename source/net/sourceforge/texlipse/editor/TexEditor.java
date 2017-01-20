@@ -32,10 +32,12 @@ import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.resource.JFaceColors;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.ITextListener;
 import org.eclipse.jface.text.ITextViewerExtension;
 import org.eclipse.jface.text.ITextViewerExtension2;
 import org.eclipse.jface.text.JFaceTextUtil;
 import org.eclipse.jface.text.MarginPainter;
+import org.eclipse.jface.text.TextEvent;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.IVerticalRuler;
 import org.eclipse.jface.text.source.projection.ProjectionSupport;
@@ -204,29 +206,51 @@ public class TexEditor extends TextEditor {
 		}
 	};
     
-	LineStyleListener lineStyleListener = new LineStyleListener() {
-		public void lineGetStyle(LineStyleEvent event) {
+	ITextListener indentTextListener = new ITextListener() {
+		
+		public void textChanged(TextEvent event) {
 			if (getSourceViewer() != null && getSourceViewer().getTextWidget() != null) {
 				StyledText textWidget = getSourceViewer().getTextWidget();
-				int lineNumber = textWidget.getLineAtOffset(event.lineOffset);
-				String line = textWidget.getLine(lineNumber);
-				int chars = 0;
-				loop : for (byte c : line.getBytes()) {
-					switch (c) {
-						case ' ':
-							chars++;
-							break;
-						case '\t':
-							chars += getSourceViewerConfiguration().getTabWidth(getSourceViewer());
-							break;
-						default:
-							break loop;
-					}
+				if (event.getLength() == textWidget.getCharCount()) {
+					doWrapIndent();
+				} else {
+					int lineNumber = textWidget.getLineAtOffset(event.getOffset());
+					doWrapIndentLine(lineNumber);
 				}
-				event.wrapIndent = chars * JFaceTextUtil.getAverageCharWidth(textWidget);
 			}
 		}
 	};
+
+	private void doWrapIndentLine(int lineNumber) {
+		if (getSourceViewer() != null && getSourceViewer().getTextWidget() != null) {
+			StyledText textWidget = getSourceViewer().getTextWidget();
+			String line = textWidget.getLine(lineNumber);
+			int chars = 0;
+			loop : for (byte c : line.getBytes()) {
+				switch (c) {
+					case ' ':
+						chars++;
+						break;
+					case '\t':
+						chars += getSourceViewerConfiguration().getTabWidth(getSourceViewer());
+						break;
+					default:
+						break loop;
+				}
+			}
+			textWidget.setLineWrapIndent(lineNumber, 1, chars * JFaceTextUtil.getAverageCharWidth(textWidget));
+		}
+	}
+
+	private void doWrapIndent() {
+		if (getSourceViewer() != null && getSourceViewer().getTextWidget() != null) {
+			StyledText textWidget = getSourceViewer().getTextWidget();
+			for (int i = 0; i < textWidget.getLineCount(); i++) {
+				doWrapIndentLine(i);
+			}
+		}
+	}
+
 	
     /** 
      * Create the part control.
@@ -307,15 +331,14 @@ public class TexEditor extends TextEditor {
 				TexAutoIndentStrategy.setHardWrap(false);
 				textWidget.setWordWrap(true);
 				textWidget.addListener(SWT.Resize, resizeListener);
-				textWidget.addLineStyleListener(lineStyleListener);
 			} else if (wrapStyle.equals(TexlipseProperties.WORDWRAP_TYPE_HARD)) {
 				textWidget.removeListener(SWT.Resize, resizeListener);
-				textWidget.removeLineStyleListener(lineStyleListener);
 				TexAutoIndentStrategy.setHardWrap(true);
 				textWidget.setWordWrap(false);
 			}
 		}
 		textWidget.addListener(SWT.Activate, resizeListener);
+		getViewer().addTextListener(indentTextListener);
     }
 
     /** 
