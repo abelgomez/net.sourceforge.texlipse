@@ -11,15 +11,6 @@ package net.sourceforge.texlipse.editor;
 
 import java.util.ArrayList;
 
-
-import net.sourceforge.texlipse.TexlipsePlugin;
-import net.sourceforge.texlipse.model.TexDocumentModel;
-import net.sourceforge.texlipse.outline.TexOutlinePage;
-import net.sourceforge.texlipse.properties.TexlipseProperties;
-import net.sourceforge.texlipse.treeview.views.TexOutlineTreeView;
-import net.sourceforge.texlipse.viewer.ViewerAttributeRegistry;
-import net.sourceforge.texlipse.viewer.ViewerManager;
-
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -27,10 +18,7 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.JFacePreferences;
 import org.eclipse.jface.preference.PreferenceConverter;
-import org.eclipse.jface.resource.JFaceColors;
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextListener;
 import org.eclipse.jface.text.ITextViewerExtension;
@@ -46,12 +34,7 @@ import org.eclipse.jface.viewers.IPostSelectionProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.ExtendedModifyEvent;
-import org.eclipse.swt.custom.ExtendedModifyListener;
-import org.eclipse.swt.custom.LineStyleEvent;
-import org.eclipse.swt.custom.LineStyleListener;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.custom.VerifyKeyListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.KeyEvent;
@@ -60,24 +43,26 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.graphics.FontMetrics;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Slider;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.editors.text.TextEditor;
-import org.eclipse.ui.internal.editors.text.EditorsPlugin;
 import org.eclipse.ui.texteditor.AbstractDecoratedTextEditorPreferenceConstants;
 import org.eclipse.ui.texteditor.ITextEditorActionDefinitionIds;
 import org.eclipse.ui.texteditor.SourceViewerDecorationSupport;
 import org.eclipse.ui.texteditor.TextOperationAction;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
+
+import net.sourceforge.texlipse.TexlipsePlugin;
+import net.sourceforge.texlipse.model.TexDocumentModel;
+import net.sourceforge.texlipse.outline.TexOutlinePage;
+import net.sourceforge.texlipse.properties.TexlipseProperties;
+import net.sourceforge.texlipse.treeview.views.TexOutlineTreeView;
+import net.sourceforge.texlipse.viewer.ViewerAttributeRegistry;
+import net.sourceforge.texlipse.viewer.ViewerManager;
 
 
 /**
@@ -188,6 +173,7 @@ public class TexEditor extends TextEditor {
 					slider.setIncrement(1);
 					slider.setPageIncrement(1);
 					slider.setThumb(1);
+	    			slider.setToolTipText(String.valueOf(lineLength));
 				}
 				
 
